@@ -31,6 +31,16 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        #cameraFeed {
+            width: 100%;
+            max-width: 640px;
+            max-height: 480px;
+            margin: 0 auto;
+            display: block;
+        }
+        #cameraCanvas {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -74,7 +84,7 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">อัพโหลดรูปภาพ</label>
                         <div class="flex flex-col space-y-4">
                             <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                                <input type="file" id="imageUpload" accept="image/*" capture="environment"
+                                <input type="file" id="imageUpload" accept="image/*"
                                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                 <div id="uploadPlaceholder">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,6 +172,8 @@
                         <ul class="list-disc list-inside text-gray-700 mt-2">
                             <li>ปรับปรุงระบบแสดงผล/สถานะ</li>
                             <li>เพิ่มปุ่มรีเซ็ตในหน้าแสดงผล</li>
+                            <li>ปรับปรุงฟังก์ชันกล้องให้ใช้งานได้ทั้งคอมพิวเตอร์และโทรศัพท์</li>
+                            <li>ปรับปรุงการขออนุญาตใช้งานกล้อง</li>
                             <li>ปรับปรุงประสิทธิภาพการทำงาน</li>
                         </ul>
                     </div>
@@ -175,6 +187,67 @@
                             <li>ระบบแสดงสถานะและการจัดการข้อมูล</li>
                         </ul>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Modal -->
+        <div id="cameraModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-medium">ถ่ายภาพ</h3>
+                    <button id="closeCameraModal" class="text-gray-500 hover:text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="relative">
+                    <video id="cameraFeed" autoplay playsinline></video>
+                    <canvas id="cameraCanvas"></canvas>
+                    
+                    <div id="cameraError" class="hidden absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div class="text-center p-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-red-600 font-medium">ไม่สามารถเข้าถึงกล้องได้</p>
+                            <p class="text-gray-600 mt-1">กรุณาตรวจสอบว่าอนุญาตให้เข้าถึงกล้องแล้ว</p>
+                            <button id="retryCamera" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                ลองใหม่อีกครั้ง
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="cameraPermissionRequest" class="hidden absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div class="text-center p-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-blue-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <p class="text-gray-800 font-medium">อนุญาตให้เข้าถึงกล้อง</p>
+                            <p class="text-gray-600 mt-1">กรุณาอนุญาตให้เว็บไซต์เข้าถึงกล้องของคุณ</p>
+                            <p class="text-gray-600 mt-1">หากมีการแจ้งเตือนขออนุญาต กรุณากด "อนุญาต" หรือ "Allow"</p>
+                            <button id="requestCameraPermission" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                อนุญาตให้เข้าถึงกล้อง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center space-x-4 mt-4">
+                    <button id="switchCameraBtn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                    </button>
+                    <button id="takePictureBtn" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        ถ่ายภาพ
+                    </button>
                 </div>
             </div>
         </div>
@@ -224,6 +297,9 @@
         let mimeType = '';
         let currentPage = 'homePage';
         let userData = [];
+        let stream = null;
+        let facingMode = 'environment'; // Default to back camera
+        let hasRequestedPermission = false;
 
         // DOM Elements
         const pages = {
@@ -287,17 +363,201 @@
             document.getElementById('searchInput').value = ''; // Clear search input
         });
 
+        // Check if browser supports camera access
+        function checkCameraSupport() {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        }
+
+        // Camera functionality
+        const cameraModal = document.getElementById('cameraModal');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const cameraError = document.getElementById('cameraError');
+        const cameraPermissionRequest = document.getElementById('cameraPermissionRequest');
+        const captureBtn = document.getElementById('captureBtn');
+        const closeCameraModal = document.getElementById('closeCameraModal');
+        const takePictureBtn = document.getElementById('takePictureBtn');
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        const retryCamera = document.getElementById('retryCamera');
+        const requestCameraPermission = document.getElementById('requestCameraPermission');
+
+        captureBtn.addEventListener('click', openCamera);
+        closeCameraModal.addEventListener('click', closeCamera);
+        takePictureBtn.addEventListener('click', takePicture);
+        switchCameraBtn.addEventListener('click', switchCamera);
+        retryCamera.addEventListener('click', requestCameraAccess);
+        requestCameraPermission.addEventListener('click', requestCameraAccess);
+
+        function openCamera() {
+            // Show camera modal
+            cameraModal.classList.remove('hidden');
+            
+            // Hide error and video initially
+            cameraError.classList.add('hidden');
+            cameraFeed.classList.add('hidden');
+            
+            // Check if browser supports camera
+            if (!checkCameraSupport()) {
+                showCameraError("เบราว์เซอร์ของคุณไม่รองรับการใช้งานกล้อง");
+                return;
+            }
+            
+            // Check if permission was already granted
+            navigator.mediaDevices.enumerateDevices()
+                .then(devices => {
+                    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                    
+                    if (videoDevices.length === 0) {
+                        showCameraError("ไม่พบอุปกรณ์กล้องในระบบ");
+                        return;
+                    }
+                    
+                    // If we haven't requested permission yet, show the permission request screen
+                    if (!hasRequestedPermission) {
+                        cameraPermissionRequest.classList.remove('hidden');
+                    } else {
+                        // Otherwise try to access the camera directly
+                        requestCameraAccess();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error enumerating devices:', error);
+                    requestCameraAccess(); // Try to access camera anyway
+                });
+        }
+
+        async function requestCameraAccess() {
+            // Hide permission request screen
+            cameraPermissionRequest.classList.add('hidden');
+            hasRequestedPermission = true;
+            
+            try {
+                // Stop any existing stream
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Get camera access with specific constraints for better mobile compatibility
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                
+                // Connect stream to video element
+                cameraFeed.srcObject = stream;
+                
+                // Show video feed and hide error
+                cameraFeed.classList.remove('hidden');
+                cameraError.classList.add('hidden');
+                
+                // Make sure video is ready to play
+                cameraFeed.onloadedmetadata = () => {
+                    cameraFeed.play().catch(e => console.error('Error playing video:', e));
+                };
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                
+                // Show appropriate error message
+                if (error.name === 'NotAllowedError') {
+                    showCameraError("การเข้าถึงกล้องถูกปฏิเสธ กรุณาอนุญาตให้เข้าถึงกล้องในการตั้งค่าเบราว์เซอร์");
+                } else if (error.name === 'NotFoundError') {
+                    showCameraError("ไม่พบอุปกรณ์กล้องในระบบ");
+                } else {
+                    showCameraError("เกิดข้อผิดพลาดในการเข้าถึงกล้อง: " + error.message);
+                }
+            }
+        }
+
+        function showCameraError(message) {
+            const errorMessageElement = cameraError.querySelector('p.text-red-600');
+            if (errorMessageElement) {
+                errorMessageElement.textContent = message;
+            }
+            cameraError.classList.remove('hidden');
+            cameraFeed.classList.add('hidden');
+        }
+
+        function closeCamera() {
+            cameraModal.classList.add('hidden');
+            
+            // Stop camera stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+
+        async function switchCamera() {
+            // Toggle between front and back camera
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            
+            // Reopen camera with new facing mode
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                });
+                
+                cameraFeed.srcObject = stream;
+                cameraFeed.classList.remove('hidden');
+                cameraError.classList.add('hidden');
+            } catch (error) {
+                console.error('Error switching camera:', error);
+                showCameraError("ไม่สามารถสลับกล้องได้");
+            }
+        }
+
+        function takePicture() {
+            if (!stream) return;
+            
+            // Set canvas dimensions to match video
+            const width = cameraFeed.videoWidth;
+            const height = cameraFeed.videoHeight;
+            cameraCanvas.width = width;
+            cameraCanvas.height = height;
+            
+            // Draw video frame to canvas
+            const context = cameraCanvas.getContext('2d');
+            context.drawImage(cameraFeed, 0, 0, width, height);
+            
+            // Get image data
+            const imageDataUrl = cameraCanvas.toDataURL('image/jpeg', 0.8); // Use 0.8 quality for better compression
+            
+            // Set image data for form
+            imageBase64 = imageDataUrl.split(',')[1];
+            fileName = `camera_${new Date().getTime()}.jpg`;
+            mimeType = 'image/jpeg';
+            
+            // Update preview
+            imagePreview.src = imageDataUrl;
+            uploadPlaceholder.classList.add('hidden');
+            imagePreviewContainer.classList.remove('hidden');
+            
+            // Close camera modal
+            closeCamera();
+        }
+
         // Image upload handling
         const imageUpload = document.getElementById('imageUpload');
         const imagePreview = document.getElementById('imagePreview');
         const imagePreviewContainer = document.getElementById('imagePreviewContainer');
         const uploadPlaceholder = document.getElementById('uploadPlaceholder');
         const removeImageBtn = document.getElementById('removeImage');
-        const captureBtn = document.getElementById('captureBtn');
 
         imageUpload.addEventListener('change', handleImageUpload);
         removeImageBtn.addEventListener('click', removeImage);
-        captureBtn.addEventListener('click', () => imageUpload.click());
 
         function handleImageUpload(e) {
             const file = e.target.files[0];
@@ -523,5 +783,5 @@
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96936a9f431174f2',t:'MTc1NDE5ODk1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96937e6762ca732b',t:'MTc1NDE5OTc2OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
