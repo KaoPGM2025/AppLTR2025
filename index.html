@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกข้อมูลผู้ใช้</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f4f8;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 text-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold">ระบบบันทึกข้อมูลผู้ใช้</div>
+                <div class="flex space-x-4">
+                    <button id="homeBtn" class="px-3 py-2 rounded hover:bg-blue-700 bg-blue-800">หน้าหลัก</button>
+                    <button id="statusBtn" class="px-3 py-2 rounded hover:bg-blue-700">แสดงผล/สถานะ</button>
+                    <button id="versionBtn" class="px-3 py-2 rounded hover:bg-blue-700">เวอร์ชั่นอัพเดต</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <div class="container mx-auto px-4 py-8">
+        <!-- Home Page / User Form -->
+        <div id="homePage" class="fade-in">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+                <h2 class="text-2xl font-bold mb-6 text-blue-800 text-center">แบบฟอร์มบันทึกข้อมูลผู้ใช้</h2>
+                
+                <form id="userForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="setNumber" class="block text-sm font-medium text-gray-700 mb-1">ชุดที่</label>
+                            <input type="text" id="setNumber" name="setNumber" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">วันที่</label>
+                            <input type="date" id="date" name="date" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">อัพโหลดรูปภาพ</label>
+                        <div class="flex flex-col space-y-4">
+                            <div class="relative border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                <input type="file" id="imageUpload" accept="image/*" capture="environment"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                                <div id="uploadPlaceholder">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p class="mt-2 text-sm text-gray-500">คลิกเพื่ออัพโหลดรูปภาพ หรือถ่ายภาพ</p>
+                                </div>
+                                <div id="imagePreviewContainer" class="hidden">
+                                    <img id="imagePreview" class="max-h-48 mx-auto" src="" alt="ตัวอย่างรูปภาพ">
+                                    <button type="button" id="removeImage" class="mt-2 text-sm text-red-600 hover:text-red-800">ลบรูปภาพ</button>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-center">
+                                <button type="button" id="captureBtn" class="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    เปิดกล้อง
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="submit" id="submitBtn" class="px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Status Page -->
+        <div id="statusPage" class="hidden fade-in">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-blue-800">แสดงผล/สถานะ</h2>
+                    <div class="flex flex-col items-center">
+                        <button id="resetBtn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
+                        <span class="text-xs mt-1 text-gray-600">รีเซ็ต</span>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <input type="text" id="searchInput" placeholder="ค้นหาข้อมูล..." 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border-b text-left">ชุดที่</th>
+                                <th class="py-2 px-4 border-b text-left">วันที่</th>
+                                <th class="py-2 px-4 border-b text-left">รูปภาพ</th>
+                                <th class="py-2 px-4 border-b text-left">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTable">
+                            <!-- Data will be loaded here -->
+                            <tr>
+                                <td colspan="4" class="py-4 px-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Version Page -->
+        <div id="versionPage" class="hidden fade-in">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-2xl mx-auto">
+                <h2 class="text-2xl font-bold mb-6 text-blue-800 text-center">เวอร์ชั่นอัพเดต</h2>
+                
+                <div class="space-y-4">
+                    <div class="border-l-4 border-blue-500 pl-4 py-2">
+                        <p class="font-semibold">เวอร์ชั่น 2.0.0 (ปัจจุบัน)</p>
+                        <p class="text-gray-600">วันที่อัพเดต: <span id="currentDate"></span></p>
+                        <ul class="list-disc list-inside text-gray-700 mt-2">
+                            <li>ปรับปรุงระบบแสดงผล/สถานะ</li>
+                            <li>เพิ่มปุ่มรีเซ็ตในหน้าแสดงผล</li>
+                            <li>ปรับปรุงประสิทธิภาพการทำงาน</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="border-l-4 border-gray-300 pl-4 py-2">
+                        <p class="font-semibold">เวอร์ชั่น 1.0.0</p>
+                        <p class="text-gray-600">วันที่อัพเดต: 1 มิถุนายน 2566</p>
+                        <ul class="list-disc list-inside text-gray-700 mt-2">
+                            <li>เปิดตัวระบบบันทึกข้อมูลผู้ใช้</li>
+                            <li>ฟีเจอร์อัพโหลดรูปภาพและถ่ายภาพ</li>
+                            <li>ระบบแสดงสถานะและการจัดการข้อมูล</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                <div class="loader"></div>
+                <p class="mt-4 text-lg font-medium">กำลังดำเนินการ...</p>
+            </div>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md mx-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <p class="mt-4 text-xl font-medium">บันทึกข้อมูลสำเร็จ</p>
+                <p id="successMessage" class="mt-2 text-gray-600">ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว</p>
+                <button id="closeSuccessModal" class="mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    ตกลง
+                </button>
+            </div>
+        </div>
+
+        <!-- Error Modal -->
+        <div id="errorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md mx-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="mt-4 text-xl font-medium">เกิดข้อผิดพลาด</p>
+                <p id="errorMessage" class="mt-2 text-gray-600">ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง</p>
+                <button id="closeErrorModal" class="mt-6 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0tZk51Jam3KRDLESKmNHD9EsGHq7y03p8D7DutVLN6HCzdx_X2rEkfocs-dMetC6V/exec';
+        let imageBase64 = '';
+        let fileName = '';
+        let mimeType = '';
+        let currentPage = 'homePage';
+        let userData = [];
+
+        // DOM Elements
+        const pages = {
+            homePage: document.getElementById('homePage'),
+            statusPage: document.getElementById('statusPage'),
+            versionPage: document.getElementById('versionPage')
+        };
+        
+        const navButtons = {
+            homeBtn: document.getElementById('homeBtn'),
+            statusBtn: document.getElementById('statusBtn'),
+            versionBtn: document.getElementById('versionBtn')
+        };
+
+        // Set current date for version page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set default date to today for the form
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+            
+            // Set current date for version page
+            const currentDateElement = document.getElementById('currentDate');
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateElement.textContent = new Date().toLocaleDateString('th-TH', options);
+        });
+
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            Object.values(pages).forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected page
+            pages[pageId].classList.remove('hidden');
+            currentPage = pageId;
+            
+            // Update active button
+            Object.entries(navButtons).forEach(([id, btn]) => {
+                if (id === pageId + 'Btn') {
+                    btn.classList.add('bg-blue-800');
+                } else {
+                    btn.classList.remove('bg-blue-800');
+                }
+            });
+
+            // Load data if showing status page
+            if (pageId === 'statusPage') {
+                loadUserData();
+            }
+        }
+
+        // Event listeners for navigation
+        navButtons.homeBtn.addEventListener('click', () => showPage('homePage'));
+        navButtons.statusBtn.addEventListener('click', () => showPage('statusPage'));
+        navButtons.versionBtn.addEventListener('click', () => showPage('versionPage'));
+
+        // Reset button functionality
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            loadUserData(); // Reload data without clearing it
+            document.getElementById('searchInput').value = ''; // Clear search input
+        });
+
+        // Image upload handling
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+        const removeImageBtn = document.getElementById('removeImage');
+        const captureBtn = document.getElementById('captureBtn');
+
+        imageUpload.addEventListener('change', handleImageUpload);
+        removeImageBtn.addEventListener('click', removeImage);
+        captureBtn.addEventListener('click', () => imageUpload.click());
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            fileName = file.name;
+            mimeType = file.type;
+            
+            if (!file.type.match('image.*')) {
+                alert('กรุณาอัพโหลดไฟล์รูปภาพเท่านั้น');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                imageBase64 = event.target.result.split(',')[1]; // Remove the data:image/jpeg;base64, part
+                imagePreview.src = event.target.result;
+                uploadPlaceholder.classList.add('hidden');
+                imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage() {
+            imageUpload.value = '';
+            imageBase64 = '';
+            fileName = '';
+            mimeType = '';
+            imagePreview.src = '';
+            uploadPlaceholder.classList.remove('hidden');
+            imagePreviewContainer.classList.add('hidden');
+        }
+
+        // Form submission
+        const userForm = document.getElementById('userForm');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const successModal = document.getElementById('successModal');
+        const errorModal = document.getElementById('errorModal');
+        const closeSuccessModal = document.getElementById('closeSuccessModal');
+        const closeErrorModal = document.getElementById('closeErrorModal');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+
+        userForm.addEventListener('submit', handleFormSubmit);
+        closeSuccessModal.addEventListener('click', () => successModal.classList.add('hidden'));
+        closeErrorModal.addEventListener('click', () => errorModal.classList.add('hidden'));
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const setNumber = document.getElementById('setNumber').value;
+            const date = document.getElementById('date').value;
+            
+            if (!setNumber || !date) {
+                alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return;
+            }
+            
+            if (!imageBase64) {
+                alert('กรุณาอัพโหลดรูปภาพ');
+                return;
+            }
+            
+            // Show loading overlay
+            loadingOverlay.classList.remove('hidden');
+            
+            try {
+                // Prepare data for submission
+                const params = new URLSearchParams();
+                params.append('action', 'saveData');
+                params.append('setNumber', setNumber);
+                params.append('date', date);
+                params.append('imageBase64', imageBase64);
+                params.append('fileName', fileName);
+                params.append('mimeType', mimeType);
+                
+                // Send data to Google Apps Script
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: params
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading overlay
+                loadingOverlay.classList.add('hidden');
+                
+                if (result.success) {
+                    // Show success message
+                    successMessage.textContent = result.message || 'ข้อมูลของคุณถูกบันทึกเรียบร้อยแล้ว';
+                    successModal.classList.remove('hidden');
+                    
+                    // Reset form
+                    userForm.reset();
+                    removeImage();
+                    
+                    // Set default date to today
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('date').value = today;
+                } else {
+                    // Show error message
+                    errorMessage.textContent = result.message || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง';
+                    errorModal.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                loadingOverlay.classList.add('hidden');
+                errorMessage.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+                errorModal.classList.remove('hidden');
+            }
+        }
+
+        // Load user data for status page
+        async function loadUserData() {
+            const dataTable = document.getElementById('dataTable');
+            dataTable.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-center text-gray-500">กำลังโหลดข้อมูล...</td></tr>';
+            
+            try {
+                const params = new URLSearchParams();
+                params.append('action', 'getStatusData'); // Get data from Sheet2
+                
+                const response = await fetch(SCRIPT_URL + '?' + params.toString());
+                const result = await response.json();
+                
+                if (result.success) {
+                    userData = result.data;
+                    renderUserData(userData);
+                } else {
+                    dataTable.innerHTML = `<tr><td colspan="4" class="py-4 px-4 text-center text-red-500">${result.message || 'ไม่สามารถโหลดข้อมูลได้'}</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                dataTable.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-center text-red-500">เกิดข้อผิดพลาดในการเชื่อมต่อ</td></tr>';
+            }
+        }
+
+        // Render user data in table
+        function renderUserData(data) {
+            const dataTable = document.getElementById('dataTable');
+            
+            if (!data || data.length === 0) {
+                dataTable.innerHTML = '<tr><td colspan="4" class="py-4 px-4 text-center text-gray-500">ไม่พบข้อมูล</td></tr>';
+                return;
+            }
+            
+            let html = '';
+            data.forEach((item) => {
+                const statusClass = getStatusClass(item.status);
+                
+                html += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4">${item.setNumber || '-'}</td>
+                    <td class="py-3 px-4">${formatDate(item.date) || '-'}</td>
+                    <td class="py-3 px-4">
+                        ${item.imageUrl ? 
+                            `<a href="${item.imageUrl}" target="_blank" class="text-blue-600 hover:underline flex items-center">
+                                <img src="${item.imageUrl}" alt="รูปภาพ" class="w-12 h-12 object-cover rounded">
+                                <span class="ml-2">ดูรูปภาพ</span>
+                            </a>` : 
+                            '-'
+                        }
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
+                            ${item.status || 'รอดำเนินการ'}
+                        </span>
+                    </td>
+                </tr>
+                `;
+            });
+            
+            dataTable.innerHTML = html;
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', handleSearch);
+
+        function handleSearch() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            if (!userData || userData.length === 0) return;
+            
+            const filteredData = userData.filter(item => {
+                return (
+                    (item.setNumber && item.setNumber.toLowerCase().includes(searchTerm)) ||
+                    (item.date && item.date.toLowerCase().includes(searchTerm)) ||
+                    (item.status && item.status.toLowerCase().includes(searchTerm))
+                );
+            });
+            
+            renderUserData(filteredData);
+        }
+
+        // Helper functions
+        function getStatusClass(status) {
+            switch (status) {
+                case 'รอดำเนินการ':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'กำลังดำเนินการ':
+                    return 'bg-blue-100 text-blue-800';
+                case 'เสร็จสิ้น':
+                    return 'bg-green-100 text-green-800';
+                case 'ยกเลิก':
+                    return 'bg-red-100 text-red-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96936a9f431174f2',t:'MTc1NDE5ODk1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
